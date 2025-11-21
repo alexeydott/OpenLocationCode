@@ -220,7 +220,7 @@ type
       GRID_ROWS_POW_GRID_CODE_LENGTH = 3125;
       GRID_COLS_POW_GRID_CODE_LENGTH = 1024;
 
-      // Pre-calculated power tables for ComputeLatitudePrecision
+      // Pre-calculated power tables for ComputePrecision
       POWER_20_TABLE: array[0..2] of Double = (1.0, 20.0, 400.0); // 20^0, 20^1, 20^2
       INV_POWER_20_TABLE: array[0..3] of Double = (1.0, 1/20, 1/400, 1/8000); // 20^0, 20^-1, 20^-2, 20^-3
     {$endregion}
@@ -386,9 +386,10 @@ type
     /// </summary>
     class function AdjustLatitude(LatDegrees: Double; EffectiveLength: Integer): Double; static;
 
-    /// <summary>Compute the latitude precision value for a given code length.
+    /// <summary>Compute precision for a given code length.
     /// </summary>
-    class function ComputeLatitudePrecision(Length: Integer): Double; static;
+    class function ComputePrecision(Length: Integer): Double; static;
+
     // int OLC_EncodeIntegers(const OLC_LatLonIntegers* location, size_t length, char* code, int maxlen);
     /// <summary>
     /// Encodes a location into an Open Location Code from its integer representation.
@@ -709,8 +710,8 @@ begin
   while len < kMaximumDigitCount do
   begin
     // Find cell dimensions in degrees for the current code length.
-    latPrecisionDeg := ComputeLatitudePrecision(len);
-    lonPrecisionDeg := ComputeLatitudePrecision(len);
+    latPrecisionDeg := ComputePrecision(len);
+    lonPrecisionDeg := ComputePrecision(len);
 
     // Calculate cell size in meters with high accuracy ---
     latRad := DegToRad(Latitude);
@@ -784,11 +785,11 @@ begin
   if LatDegrees < OLC_kLatMaxDegrees then
     Exit(LatDegrees);
 
-  Prec := ComputeLatitudePrecision(EffectiveLength);
+  Prec := ComputePrecision(EffectiveLength);
   Result := LatDegrees - Prec * 0.5;
 end;
 
-class function TOLC.ComputeLatitudePrecision(Length: Integer): Double;
+class function TOLC.ComputePrecision(Length: Integer): Double;
 var Exponent: Integer;
 begin
   // From olc.c: if (length <= kPairCodeLength)
@@ -1317,7 +1318,7 @@ begin
   Start := 0;
   for J := Low(RemovalLengths) to High(RemovalLengths) do
   begin
-    AreaEdge := ComputeLatitudePrecision(RemovalLengths[J]) * 0.3; // Safety factor
+    AreaEdge := ComputePrecision(RemovalLengths[J]) * 0.3; // Safety factor
     if Range < AreaEdge then
     begin
       Start := RemovalLengths[J];
